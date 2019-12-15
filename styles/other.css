@@ -1,0 +1,8 @@
+/* Header styles */
+header {
+    background-color: rgba(9, 102, 13, 0.863);
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+  }
