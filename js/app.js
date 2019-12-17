@@ -1,6 +1,6 @@
 //API Authentication
 const newsApiKey = "a702b8a38878465eb7cade2dcb0b07a1";
-let url = "https://newsapi.org/v2/top-headlines?";
+let newsApiUrl = "https://newsapi.org/v2/top-headlines?";
 let searchOptions = {
   //apiKey goes last
   country:"mx",
@@ -8,28 +8,29 @@ let searchOptions = {
 }
 
 //Auxiliary variable
-var dossier=[];
+let dossier=[];
+let currentIndex=[];
 
 //Populating URL
 for(let key in searchOptions){
-  url += "&" + key + "=" + searchOptions[key];
+  newsApiUrl += "&" + key + "=" + searchOptions[key];
 }
-url=url.replace('?&','?');
-console.log(url);
+newsApiUrl=newsApiUrl.replace('?&','?');
+console.log(newsApiUrl);
 
 //Extracting API feedback
-$.get(url).done(function(feedback){
+$.get(newsApiUrl).done(function(feedback){
   if(feedback.totalResults === 0){
     console.log("No news");
   } else {
-    dossier = feedback.articles
-    console.log(dossier.length);
-    loadArticle(dossier);
+    dossier[0] = feedback.articles
+    console.log(dossier[0].length);
+    listNewsApi(dossier[0]);
   }
 })
 
 //Function to process JSON and DOM interaction
-function loadArticle(apiArticles){
+function listNewsApi(apiArticles){
   $.each(apiArticles, function(){
     let recordImage = this.urlToImage;
     let recordTitle = this.title;
@@ -37,9 +38,6 @@ function loadArticle(apiArticles){
     let recordImpressions = Math.floor(Math.random()*1000);
     let recordLink = this.url;
   
-    //console.log(recordImage, recordTitle);
-
-    /* S T A R T   O V E R*/
     $("#main").append($('<article/>',{'class':'article'}).append(
         $('<section/>',{'class':'featuredImage'}).append(
             $("<img>").attr({
@@ -49,7 +47,7 @@ function loadArticle(apiArticles){
         )
         .append(
           $('<section/>',{'class':'articleContent'}).append(
-            $("<a>").attr("href","#").click(function(){displayModal(recordLink)}).append(
+            $("<a>").attr("href","#").click(function(){displayModal(apiArticles, indexArticles(apiArticles,recordLink))}).append(
               $('<h3/>', {text: recordTitle}).append(
                 $('<h6/>', {text: recordCategory})
               )
@@ -66,10 +64,56 @@ function loadArticle(apiArticles){
   });
 }
 
+//Function to hide and clear modal
+function closeModal(){
+  $("#popUp").addClass("loader hidden").empty();
+}
+
+//Function to unhide modal
+function openModal(){
+  $("#popUp").removeClass("loader hidden");
+}
+
+//Function to index articles
+function indexArticles(articleObj, articleUrl){
+  let pos = articleObj.map(function(e){
+    return e.url;
+  }).indexOf(articleUrl);
+  return pos;
+}
+
+//Function to call modal for given index
+function useIndex(articleObj, articleIndex){
+  if(articleIndex===articleObj.length){
+    articleIndex=0;
+  } else {
+    articleIndex++;
+  }
+  let pos = articleObj.map(function(e,articleIndex){
+    return [e.url, e.title]
+  });
+  closeModal();
+  displayModal(pos[0],pos[1]);//generates circular reference
+  
+}
+
 //Function to trigger modal
-function displayModal(url){
-  console.log(url);
-  //$(".loader").css("display", "block");
-  //popUp.loader.style.display = "block";
-  $("#popUp").toggleClass("popUpAction");
+function displayModal(list, index){
+  console.log(list);
+
+//Continue here to change this perspective from link and title parameters to list and index parameters
+//to try to squash the circular reference
+
+  $("#popUp").append($('<a/>', {'href':'#', 'class':'closePopUp', text: 'X', 'onclick': 'closeModal()'}).css('font-size','10px').append(
+     $('<div/>', {'class':'container'}).append(
+      $('<h1/>', {text: title}).css('font-size','10px').append(
+        $('<p/>', {'href': linkRef}).append(
+          $('<a/>', {'href':'#', 'class':'popUpAction', 'onclick': useIndex(dossier,indexArticles(dossier,linkRef)), text: 'Read more from source'})
+        )
+      )
+     )
+    )
+  )
+
+  openModal();
 }
