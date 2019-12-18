@@ -1,6 +1,7 @@
 //API Authentication
 const newsApiKey = "a702b8a38878465eb7cade2dcb0b07a1";
 let newsApiUrl = "https://newsapi.org/v2/top-headlines?";
+const herokuProxy = "https://cors-anywhere.herokuapp.com/"
 let searchOptions = {
   //apiKey goes last
   country:"mx",
@@ -31,7 +32,7 @@ $.get(newsApiUrl).done(function(feedback){
 
 //Function to process JSON and DOM interaction
 function listNewsApi(apiArticles){
-  $.each(apiArticles, function(){
+  $.each(apiArticles, function(indexArticle){
     let recordImage = this.urlToImage;
     let recordTitle = this.title;
     let recordCategory = "News API : Top Headlines";
@@ -47,7 +48,7 @@ function listNewsApi(apiArticles){
         )
         .append(
           $('<section/>',{'class':'articleContent'}).append(
-            $("<a>").attr("href","#").click(function(){displayModal(apiArticles, indexArticles(apiArticles,recordLink))}).append(
+            $("<a>").attr("href","#").click(function(){displayModal(apiArticles, indexArticle)}).append(
               $('<h3/>', {text: recordTitle}).append(
                 $('<h6/>', {text: recordCategory})
               )
@@ -66,7 +67,7 @@ function listNewsApi(apiArticles){
 
 //Function to hide and clear modal
 function closeModal(){
-  $("#popUp").addClass("loader hidden").empty();
+  $("#popUp").addClass("hidden").empty();
 }
 
 //Function to unhide modal
@@ -74,46 +75,43 @@ function openModal(){
   $("#popUp").removeClass("loader hidden");
 }
 
-//Function to index articles
-function indexArticles(articleObj, articleUrl){
-  let pos = articleObj.map(function(e){
-    return e.url;
-  }).indexOf(articleUrl);
-  return pos;
-}
-
-//Function to call modal for given index
-function useIndex(articleObj, articleIndex){
-  if(articleIndex===articleObj.length){
-    articleIndex=0;
+//Function to go to next article inside modal
+function nextArticle(list, index){
+  if(index===(list.length-1)){
+    currentIndex=0;
   } else {
-    articleIndex++;
+    currentIndex++;
   }
-  let pos = articleObj.map(function(e,articleIndex){
-    return [e.url, e.title]
-  });
   closeModal();
-  displayModal(pos[0],pos[1]);//generates circular reference
-  
+  displayModal(list,currentIndex);
 }
 
 //Function to trigger modal
 function displayModal(list, index){
-  console.log(list);
-
-//Continue here to change this perspective from link and title parameters to list and index parameters
-//to try to squash the circular reference
+  
+  currentIndex=index;
+  let refresh=false;
+  let proxyLink = herokuProxy + list[index].url;
+  console.log(list[index].title, proxyLink, index);
+ 
+  if (refresh){
+    return false;
+  }
 
   $("#popUp").append($('<a/>', {'href':'#', 'class':'closePopUp', text: 'X', 'onclick': 'closeModal()'}).css('font-size','10px').append(
      $('<div/>', {'class':'container'}).append(
-      $('<h1/>', {text: title}).css('font-size','10px').append(
-        $('<p/>', {'href': linkRef}).append(
-          $('<a/>', {'href':'#', 'class':'popUpAction', 'onclick': useIndex(dossier,indexArticles(dossier,linkRef)), text: 'Read more from source'})
+      $('<h1/>', {text: list[currentIndex].title}).css('font-size','10px').append(
+        $('<p/>', {'href': proxyLink}).append(
+          $('<a/>', {'href':'#', 'class':'popUpAction', text: 'Read more from source'}).click(function(){
+            nextArticle(list,currentIndex);
+            refresh = true;
+            return false;
+          })
         )
       )
      )
     )
   )
-
   openModal();
+
 }
