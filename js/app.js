@@ -17,6 +17,7 @@ for(let key in searchOptions){
   newsApiUrl += "&" + key + "=" + searchOptions[key];
 }
 newsApiUrl=newsApiUrl.replace('?&','?');
+newsApiUrl=herokuProxy+newsApiUrl
 console.log(newsApiUrl);
 
 //Extracting API feedback
@@ -91,18 +92,21 @@ function displayModal(list, index){
   
   currentIndex=index;
   let refresh=false;
-  let proxyLink = herokuProxy + list[index].url;
-  console.log(list[index].title, proxyLink, index);
+  console.log(list[index].title, list[index].url, index);
+
  
   if (refresh){
     return false;
   }
 
-  $("#popUp").append($('<a/>', {'href':'#', 'class':'closePopUp', text: 'X', 'onclick': 'closeModal()'}).css('font-size','10px').append(
+  $("#popUp").append($('<a/>', {'href':'#', 'class':'closePopUp', text: 'X', 'onclick': 'closeModal()'})
+    .css('font-size','10px').append(
      $('<div/>', {'class':'container'}).append(
       $('<h1/>', {text: list[currentIndex].title}).css('font-size','10px').append(
-        $('<p/>', {'href': proxyLink}).append(
-          $('<a/>', {'href':'#', 'class':'popUpAction', text: 'Read more from source'}).click(function(){
+        $('<p/>').append(
+          $('<a/>', {/*href: list[index].url, target: "_blank",*/ class:'popUpAction', text: 'Read more from source'})
+          .load(herokuProxy + list[index].url, '_blank')
+          .click(function(){
             nextArticle(list,currentIndex);
             refresh = true;
             return false;
